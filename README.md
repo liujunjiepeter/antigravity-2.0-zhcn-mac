@@ -88,4 +88,11 @@ rm -f ~/Library/Application\ Support/Antigravity/zh_cn_ui_main.js
 
 - 本项目的核心汉化字典与 Python 翻译引擎基础来自于 Windows 汉化开源项目 [antigravity-2.0-zhcn](https://github.com/kakarotto-baroko/antigravity-2.0-zhcn)。
 - 本项目针对 macOS Platform 做了全面的架构重构、ASAR 解包封包适配、以及全自动化脚本支持。
-- 本项目仅限交流与个人学习使用。
+
+---
+
+## 📄 开源许可证 (License)
+
+本项目采用 **GPL 3.0** 开源许可证：
+- **免费使用**：任何人均可免费下载、使用、分发和修改本项目代码。
+- **强制开源**：任何基于本项目的衍生作品、修改版本或二次发布版本，**必须同样以 GPL 3.0 协议公开源代码**。
