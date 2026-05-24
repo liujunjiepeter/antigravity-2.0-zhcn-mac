@@ -88,24 +88,35 @@ if ! python3 "$SCRIPT_DIR/translate_ui.py" --input "$TMP_DIR/ui_main.js"; then
     exit 1
 fi
 
-# 8. 备份原始 asar 包
-echo -e "${YELLOW}[4/6] 正在备份原厂 app.asar 包...${NC}"
-if [ ! -f "${ASAR_PATH}.bak" ]; then
-    cp "$ASAR_PATH" "${ASAR_PATH}.bak"
-    echo -e "${GREEN}备份成功: ${ASAR_PATH}.bak${NC}"
-else
-    echo -e "${BLUE}原有备份已存在，跳过备份步骤。${NC}"
-fi
-
-# 9. 解包、打重定向补丁并重新封包
-echo -e "${YELLOW}[5/6] 正在解包、注入补丁并封包 (此步骤需要几秒钟)...${NC}"
-npx -y @electron/asar extract "$ASAR_PATH" "$TMP_DIR/extracted"
+# 8. 解包、注入补丁与重新封包 (原子操作)
+echo -e "${YELLOW}[4/6] 正在提取与注入汉化补丁...${NC}"
+npx -y @electron/asar@3.4.1 extract "$ASAR_PATH" "$TMP_DIR/extracted"
 
 # 用 customScheme.ai-ui.js 覆盖 customScheme.js
 cp "$SCRIPT_DIR/customScheme.ai-ui.js" "$TMP_DIR/extracted/dist/customScheme.js"
 
-# 重新封包写回系统
-npx -y @electron/asar pack "$TMP_DIR/extracted" "$ASAR_PATH"
+# 重新打包至临时新文件，确保写入原子性
+echo -e "${YELLOW}[5/6] 正在生成新版 app.asar 封包并进行版本化备份...${NC}"
+NEW_ASAR="$TMP_DIR/app.asar.new"
+npx -y @electron/asar@3.4.1 pack "$TMP_DIR/extracted" "$NEW_ASAR"
+
+# 验证打包结果是否正常
+if [ ! -s "$NEW_ASAR" ]; then
+    echo -e "${RED}错误: 新 app.asar 生成失败或为空文件，操作已中止以防止损坏软件。${NC}"
+    exit 1
+fi
+
+# 计算原 app.asar 的哈希与当前时间戳，实现版本化历史备份
+ORIGINAL_SHA=$(shasum -a 256 "$ASAR_PATH" | awk '{print $1}')
+TIMESTAMP=$(date +%Y%m%d%H%M%S)
+BACKUP_PATH="${ASAR_PATH}.bak.${ORIGINAL_SHA:0:12}.${TIMESTAMP}"
+
+# 复制原版备份
+cp "$ASAR_PATH" "$BACKUP_PATH"
+echo -e "${GREEN}原版 app.asar 已成功版本化备份为: ${BACKUP_PATH}${NC}"
+
+# 原子式移动替换原 app.asar 文件
+mv "$NEW_ASAR" "$ASAR_PATH"
 
 # 10. 完成
 echo -e "${YELLOW}[6/6] 正在清理临时文件...${NC}"

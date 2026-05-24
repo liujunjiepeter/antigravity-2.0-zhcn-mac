@@ -50,7 +50,7 @@ New-Item -ItemType Directory -Path $TmpDir | Out-Null
 # 注册清理钩子，在脚本退出时清理临时目录
 $cleanup = {
     if (Test-Path $TmpDir) {
-        Remove-Item -Recururse -Force $TmpDir -ErrorAction SilentlyContinue
+        Remove-Item -Recurse -Force $TmpDir -ErrorAction SilentlyContinue
     }
 }
 Register-EngineEvent -SourceIdentifier "PowerShell.Exiting" -Action $cleanup | Out-Null
@@ -107,30 +107,39 @@ if ($LASTEXITCODE -ne 0) {
     exit 1
 }
 
-# 8. 备份原始 asar 包
-Write-Host "[4/6] 正在备份原厂 app.asar 包..." -ForegroundColor Yellow
-$BackupPath = "$AsarPath.bak"
-if (-not (Test-Path $BackupPath)) {
-    Copy-Item -Path $AsarPath -Destination $BackupPath -Force
-    Write-Host "备份成功: $BackupPath" -ForegroundColor Green
-} else {
-    Write-Host "原有备份已存在，跳过备份步骤。" -ForegroundColor Blue
-}
-
-# 9. 解包、打重定向补丁并重新封包
-Write-Host "[5/6] 正在解包、注入补丁并封包 (此步骤需要几秒钟)..." -ForegroundColor Yellow
+# 8. 解包、注入补丁与重新封包 (原子操作)
+Write-Host "[4/6] 正在提取与注入汉化补丁..." -ForegroundColor Yellow
 $ExtractedDir = Join-Path $TmpDir "extracted"
 
-# 临时提取 asar
-& npx -y @electron/asar extract $AsarPath $ExtractedDir
+# 临时提取 asar (使用固定版本 @electron/asar@3.4.1)
+& npx -y "@electron/asar@3.4.1" extract $AsarPath $ExtractedDir
 
 # 用 customScheme.ai-ui.js 覆盖 customScheme.js
 $CustomSchemeSource = Join-Path $ScriptDir "customScheme.ai-ui.js"
 $CustomSchemeDest = Join-Path $ExtractedDir "dist\customScheme.js"
 Copy-Item -Path $CustomSchemeSource -Destination $CustomSchemeDest -Force
 
-# 重新封包写回系统
-& npx -y @electron/asar pack $ExtractedDir $AsarPath
+# 重新打包至临时新文件，确保写入原子性
+Write-Host "[5/6] 正在生成新版 app.asar 封包并进行版本化备份..." -ForegroundColor Yellow
+$NewAsarPath = Join-Path $TmpDir "app.asar.new"
+& npx -y "@electron/asar@3.4.1" pack $ExtractedDir $NewAsarPath
+
+# 验证打包结果是否正常
+if (-not (Test-Path $NewAsarPath) -or ((Get-Item $NewAsarPath).Length -le 0)) {
+    throw "新 app.asar 生成失败或为空文件，操作已中止以防止损坏软件。"
+}
+
+# 获取原始文件的 SHA256 哈希值与时间戳进行版本化历史备份
+$OriginalSha = (Get-FileHash -Algorithm SHA256 $AsarPath).Hash.ToLower()
+$Timestamp = Get-Date -Format "yyyyMMddHHmmss"
+$BackupPath = "$AsarPath.bak.$($OriginalSha.Substring(0, 12)).$Timestamp"
+
+# 复制原版备份
+Copy-Item -Path $AsarPath -Destination $BackupPath -Force
+Write-Host "原版 app.asar 已成功版本化备份为: $BackupPath" -ForegroundColor Green
+
+# 原子式移动替换原 app.asar 文件
+Move-Item -Path $NewAsarPath -Destination $AsarPath -Force
 
 # 10. 完成
 Write-Host "[6/6] 正在清理临时文件..." -ForegroundColor Yellow

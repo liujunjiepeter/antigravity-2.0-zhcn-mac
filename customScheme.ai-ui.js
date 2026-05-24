@@ -67,26 +67,37 @@ function registerCustomSchemeHandlers() {
     electron_1.session.defaultSession.clearCache().catch((err) => {
         console.error("Failed to clear session cache before AI UI localization:", err);
     });
-    electron_1.protocol.handle('agy-ui', async () => {
-        const path = require("path");
-        const fsPromises = require("fs/promises");
-        const appDataPath = electron_1.app.getPath('userData');
-        const targetPath = path.join(appDataPath, 'zh_cn_ui_main.js');
-        const content = await fsPromises.readFile(targetPath);
-        console.log("Serving translated AI UI bundle:", targetPath);
-        return new Response(content, {
-            status: 200,
-            headers: {
-                'Content-Type': 'application/javascript; charset=utf-8',
-                'Access-Control-Allow-Origin': '*',
-                'Cache-Control': 'no-store'
+    electron_1.protocol.handle('agy-ui', async (request) => {
+        try {
+            const url = new URL(request.url);
+            if (url.hostname !== 'bundle' || url.pathname !== '/main.js') {
+                return new Response(null, { status: 404 });
             }
-        });
+            const path = require("path");
+            const fsPromises = require("fs/promises");
+            const appDataPath = electron_1.app.getPath('userData');
+            const targetPath = path.join(appDataPath, 'zh_cn_ui_main.js');
+            const content = await fsPromises.readFile(targetPath);
+            console.log("Serving translated AI UI bundle:", targetPath);
+            return new Response(content, {
+                status: 200,
+                headers: {
+                    'Content-Type': 'application/javascript; charset=utf-8',
+                    'Access-Control-Allow-Origin': '*',
+                    'Cache-Control': 'no-store, no-cache, must-revalidate'
+                }
+            });
+        } catch (err) {
+            console.error("Failed to serve translated AI UI bundle:", err);
+            return new Response(null, { status: 500 });
+        }
     });
     electron_1.session.defaultSession.webRequest.onBeforeRequest(
         { urls: [
             'http://127.0.0.1:*/main.js',
-            'https://127.0.0.1:*/main.js'
+            'https://127.0.0.1:*/main.js',
+            'http://localhost:*/main.js',
+            'https://localhost:*/main.js'
         ] },
         (details, callback) => {
             callback({ redirectURL: 'agy-ui://bundle/main.js' });
