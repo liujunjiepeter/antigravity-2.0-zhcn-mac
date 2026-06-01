@@ -82,7 +82,34 @@ def main():
         '"Conversation History"': '"历史对话"',
         '"No conversations yet"': '"暂无历史对话"',
         '"Settings"': '"设置"',
+        '"General"': '"通用"',
+        '"Workspaces"': '"工作区"',
+        '"Projects"': '"项目"',
+        '"Not in Project"': '"未归属项目"',
+        '"Conversations"': '"对话列表"',
+        '"Shortcuts"': '"快捷键"',
+        '"Provide Feedback"': '"提供反馈"',
         
+        # Search placeholders & pickers
+        '"Search all convos..."': '"搜索所有对话..."',
+        '"Search for files in the project..."': '"在项目中搜索文件..."',
+        '"Search files..."': '"搜索文件..."',
+        '"Search projects..."': '"搜索项目..."',
+        '"Search workspaces..."': '"搜索工作区..."',
+        '"Type to search..."': '"输入以搜索..."',
+        '"Add recent remote workspace"': '"添加最近的远程工作区"',
+        '"Command picker"': '"命令选择器"',
+        '"File picker"': '"文件选择器"',
+        '"Conversation picker"': '"对话选择器"',
+        '"Project picker"': '"项目选择器"',
+        '"Search all convos..."': '"搜索所有对话..."',
+        '"Search workspaces..."': '"搜索工作区..."',
+        '"Select Workspace..."': '"选择工作区..."',
+        '"Connect to Remote Workspace"': '"连接到远程工作区"',
+        '"Open SSH connection in setup window. When finished, you will be able to select the workspace in the sidebar."': '"在设置窗口中打开 SSH 连接。完成后，你将能够在侧边栏中选择该工作区。"',
+        '"Open Setup Window"': '"打开设置窗口"',
+        '"Recent Remote Workspaces"': '"最近的远程工作区"',
+
         # Chat input placeholder
         '"Ask anything, @ to mention"': '"问任何问题，输入 @ 提及"',
         '", / for actions"': '"，输入 / 执行操作"',
@@ -416,22 +443,17 @@ def main():
     pos = content.find("const g1=")
     if pos != -1:
         print("Found settings sidebar component (g1). Injecting translation map...")
-        span_str = 'F.createElement("span",{className:O("text-sm transition-colors select-none truncate flex-1",c?"text-foreground":"text-secondary-foreground group-hover:text-foreground")},a)'
-        if span_str in content:
-            translation_map = '({"Permissions":"权限","Appearance":"外观","Notifications":"通知","Models":"模型","Customizations":"自定义","Browser":"浏览器","Tab":"Tab","Editor":"编辑器","App":"应用","Best of N":"Best of N","Account":"账户","Google Drive":"谷歌云端硬盘","Shortcuts":"快捷键","Provide Feedback":"提供反馈","General":"通用","Conversations":"对话","Projects":"项目","Project General":"项目常规","Project Folders":"项目文件夹","Project Agent":"项目智能体"}[a]||a)'
-            patched_span = span_str.replace(',a)', f',{translation_map})')
-            content = content.replace(span_str, patched_span)
-            print("Successfully patched sidebar translation via direct match!")
+        # Use a highly robust multiline regex that handles any spacing, custom classNames, newlines, and variable names.
+        pattern = r'(F\.createElement\("span",\s*\{\s*className:\s*\w+\(\s*["\']text-sm transition-colors select-none truncate flex-1["\'].*?\)\s*\}\s*,\s*)([a-zA-Z0-9_$]+)\s*\)'
+        match = re.search(pattern, content)
+        if match:
+            prefix = match.group(1)
+            text_var = match.group(2)
+            translation_map = '({"Permissions":"权限","Appearance":"外观","Notifications":"通知","Models":"模型","Customizations":"自定义","Browser":"浏览器","Tab":"Tab","Editor":"编辑器","App":"应用","Best of N":"Best of N","Account":"账户","Google Drive":"谷歌云端硬盘","Shortcuts":"快捷键","Provide Feedback":"提供反馈","General":"通用","Conversations":"对话","Projects":"项目","Project General":"项目常规","Project Folders":"项目文件夹","Project Agent":"项目智能体"}[%s]||%s)' % (text_var, text_var)
+            content = content.replace(match.group(0), prefix + translation_map + ')')
+            print(f"Successfully patched sidebar translation via robust multiline regex (variable: {text_var})!")
         else:
-            # Fallback regex search for custom names/minification
-            pattern = r'(F\.createElement\("span",\{className:\w+\("text-sm transition-colors select-none truncate flex-1",\w+\?"text-foreground":"text-secondary-foreground group-hover:text-foreground"\)\},)(\w+)\)'
-            match = re.search(pattern, content)
-            if match:
-                prefix = match.group(1)
-                text_var = match.group(2)
-                translation_map = '({"Permissions":"权限","Appearance":"外观","Notifications":"通知","Models":"模型","Customizations":"自定义","Browser":"浏览器","Tab":"Tab","Editor":"编辑器","App":"应用","Best of N":"Best of N","Account":"账户","Google Drive":"谷歌云端硬盘","Shortcuts":"快捷键","Provide Feedback":"提供反馈","General":"通用","Conversations":"对话","Projects":"项目","Project General":"项目常规","Project Folders":"项目文件夹","Project Agent":"项目智能体"}[%s]||%s)' % (text_var, text_var)
-                content = content.replace(match.group(0), prefix + translation_map + ')')
-                print(f"Successfully patched sidebar translation via regex (variable: {text_var})!")
+            print("Warning: Could not find settings sidebar span creation pattern in ui_main.js.")
 
     # Save the modified file
     print(f"Writing to: {output_file}")
