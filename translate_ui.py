@@ -2,6 +2,7 @@ import os
 import sys
 import re
 import argparse
+
 def to_single_quoted(value):
     escaped = value.replace("\\", "\\\\").replace("'", "\\'")
     return f"'{escaped}'"
@@ -79,7 +80,6 @@ def main():
         '"New Conversation"': '"新建对话"',
         '"Scheduled Tasks"': '"计划任务"',
         '"Conversation History"': '"历史对话"',
-        '"Projects"': '"项目"',
         '"No conversations yet"': '"暂无历史对话"',
         '"Settings"': '"设置"',
         
@@ -88,14 +88,44 @@ def main():
         '", / for actions"': '"，输入 / 执行操作"',
         '"aria-label":"Message input"': '"aria-label":"消息输入框"',
         
-        # Settings Screens
-        '"Project General"': '"项目常规"',
-        '"Project Folders"': '"项目文件夹"',
-        '"Project Agent"': '"项目智能体"',
-        '"Account"': '"账户"',
-        '"Google Drive"': '"谷歌云端硬盘"',
-        '"General"': '"通用"',
-        '"Appearance"': '"外观"',
+        # Specific Settings Screen Titles and Labels (keeps internal identifiers in English)
+        'title:"Permissions"': 'title:"权限"',
+        'title:"Appearance"': 'title:"外观"',
+        'title:"Notifications"': 'title:"通知"',
+        'title:"Models"': 'title:"模型"',
+        'title:"Customizations"': 'title:"自定义"',
+        'title:"Browser"': 'title:"浏览器"',
+        'title:"Tab"': 'title:"Tab"',
+        'title:"Editor"': 'title:"编辑器"',
+        'title:"App"': 'title:"应用"',
+        'title:"Account"': 'title:"账户"',
+        'title:"Google Drive"': 'title:"谷歌云端硬盘"',
+        'title:"General"': 'title:"通用"',
+        'title:"Shortcuts"': 'title:"快捷键"',
+        'title:"Provide Feedback"': 'title:"提供反馈"',
+        'title:"Project General"': 'title:"项目常规"',
+        'title:"Project Folders"': 'title:"项目文件夹"',
+        'title:"Project Agent"': 'title:"项目智能体"',
+
+        'label:"Permissions"': 'label:"权限"',
+        'label:"Appearance"': 'label:"外观"',
+        'label:"Notifications"': 'label:"通知"',
+        'label:"Models"': 'label:"模型"',
+        'label:"Customizations"': 'label:"自定义"',
+        'label:"Browser"': 'label:"浏览器"',
+        'label:"Tab"': 'label:"Tab"',
+        'label:"Editor"': 'label:"编辑器"',
+        'label:"App"': 'label:"应用"',
+        'label:"Account"': 'label:"账户"',
+        'label:"Google Drive"': 'label:"谷歌云端硬盘"',
+        'label:"General"': 'label:"通用"',
+        'label:"Shortcuts"': 'label:"快捷键"',
+        'label:"Provide Feedback"': 'label:"提供反馈"',
+        'label:"Project General"': 'label:"项目常规"',
+        'label:"Project Folders"': 'label:"项目文件夹"',
+        'label:"Project Agent"': 'label:"项目智能体"',
+
+        # Settings Screen items & details
         '"Chat Settings"': '"聊天设置"',
         '"Verbose agent chat"': '"详细智能体对话"',
         '"Display and preserve intermediate thinking steps"': '"显示并保留中间思考步骤"',
@@ -109,26 +139,14 @@ def main():
         '"Background"': '"背景"',
         '"Foreground"': '"前景"',
         '"Accent"': '"强调色"',
-        '"Models"': '"模型"',
-        '"Customizations"': '"自定义"',
-        '"Browser"': '"浏览器"',
-        '"App"': '"应用"',
-        '"Account"': '"账户"',
-        '"Permissions"': '"权限"',
-        '"Notifications"': '"通知"',
-        '"Editor"': '"编辑器"',
-        '"Tab"': '"Tab"',
-        '"Best of N"': '"Best of N"',
         '"Browser Settings"': '"浏览器设置"',
         '"App Settings"': '"应用设置"',
         '"Manage application settings."': '"管理应用设置。"',
         '"Configure settings for Best of N mode."': '"配置 Best of N 模式的相关设置。"',
         '"Best of N Settings"': '"Best of N 设置"',
-        '"Shortcuts"': '"快捷键"',
-        '"Provide Feedback"': '"提供反馈"',
         '"Notification Settings"': '"通知设置"',
         '"Open System Preferences"': '"打开系统设置"',
-        '"Keyboard shortcuts for quick navigation and control."': '"用于快速导航和控制的键盘快捷键。"',
+        '"Keyboard shortcuts for quick navigation and control."': '"用于快速导航与控制的键盘快捷键。"',
         '"Recommended"': '"推荐"',
         'title:"Recommended"': 'title:"推荐"',
         '"Open Conversation Picker"': '"打开对话选择器"',
@@ -152,13 +170,10 @@ def main():
         '"Sign Out"': '"退出登录"',
         '"Email"': '"邮箱"',
         '"Terms of Service"': '"服务条款"',
-        '"Projects"': '"项目"',
-        '"Conversations"': '"对话"',
         '"Not in Project"': '"未归属项目"',
         '"Workspaces"': '"工作区"',
         '"Show all"': '"显示全部"',
         '"Keyboard Shortcuts"': '"快捷键"',
-        '"Permissions"': '"权限"',
         '"No project selected or project management not available."': '"未选择项目，或项目管理不可用。"',
         '"Open Settings"': '"打开设置"',
         '"Open Keyboard Shortcuts"': '"打开快捷键列表"',
@@ -201,8 +216,6 @@ def main():
         '"Context"': '"上下文"',
         '"Advanced"': '"高级"',
         '"Quota"': '"配额"',
-
-        # Settings labels / descriptions
         '"Allow List Terminal Commands"': '"允许列表终端命令"',
         '"Deny List Terminal Commands"': '"拒绝列表终端命令"',
         '"Agent Auto-Fix Lints"': '"智能体自动修复 Lint"',
@@ -213,14 +226,13 @@ def main():
         '"Strict Mode"': '"严格模式"',
         '"Agent Non-Workspace File Access"': '"智能体访问工作区外文件"',
         '"Enable Terminal Sandbox"': '"启用终端沙箱"',
-        '"Sandbox Allow Network"': '"沙箱允许网络"',
+        '"Sandbox Allow Network"': '"沙箱允许 network"',
         '"Enable Shell Integration"': '"启用 Shell 集成"',
         '"Terminal Command Auto Execution"': '"终端命令自动执行"',
         '"Agent Host Address"': '"智能体主机地址"',
         '"Review Policy"': '"评审策略"',
         '"Enable Sounds for Agent"': '"为智能体启用提示音"',
         '"Auto-Expand Changes Overview"': '"自动展开变更概览"',
-        '"Conversation History"': '"历史对话"',
         '"Knowledge"': '"知识库"',
         '"Auto-Open Edited Files"': '"自动打开已编辑文件"',
         '"Open Agent on Reload"': '"重载时打开智能体"',
@@ -253,8 +265,6 @@ def main():
         '"Strict"': '"严格模式"',
         '"Enabled"': '"已启用"',
         '"Value:"': '"值："',
-
-        # Settings descriptions
         '"When enabled, Agent can interact with Google Workspace through the API to search and read documents."': '"启用后，智能体可以通过 API 与 Google Workspace 交互，搜索并读取文档。"',
         '"Toggle if a confirmation is shown when using the "Reload Window" button."': '"控制使用“重载窗口”按钮时是否显示确认提示。"',
         '\'Toggle if a confirmation is shown when using the "Reload Window" button.\'': '\'控制使用“重载窗口”按钮时是否显示确认提示。\'',
@@ -262,7 +272,7 @@ def main():
         '\'When enabled, "Explain and Fix" actions will continue in the current conversation instead of starting a new one.\'': '\'启用后，“解释并修复”操作会在当前对话中继续，而不是新建对话。\'',
         '"When enabled, \'Explain and Fix\' actions will continue in the current conversation instead of starting a new one."': '"启用后，“解释并修复”操作会在当前对话中继续，而不是新建对话。"',
         '"When enabled, terminal commands run with sandbox restrictions."': '"启用后，终端命令将在沙箱限制下运行。"',
-        '"When enabled, sandboxed commands are allowed to make network requests."': '"启用后，沙箱中的命令可以发起网络请求。"',
+        '"When enabled, sandboxed commands are allowed to make network requests."': '"启用后，沙箱中的命令可以发起 network 请求。"',
         '"When enabled, Agent will use IDE\'s shell integration to detect and report terminal command execution. When disabled, the agent will use its own shell. Restart the application for this to take effect."': '"启用后，智能体会使用 IDE 的 Shell 集成来检测并报告终端命令执行情况。禁用后，智能体将使用自己的 Shell。重新启动应用后生效。"',
         '"When enabled, Agent will use IDE\'s shell integration to detect and report terminal command execution."': '"启用后，智能体会使用 IDE 的 Shell 集成来检测并报告终端命令执行情况。"',
         '"When enabled, Agent is given awareness of lint errors created by its edits and may fix them without explicit user prompting."': '"启用后，智能体会感知自身编辑产生的 Lint 错误，并可在无需明确提示的情况下修复。"',
@@ -272,7 +282,7 @@ def main():
         '"Manage your plan, credentials, and general preferences."': '"管理你的套餐、凭据和通用偏好设置。"',
         '`When toggled on, ${c.product.nameShort} collects usage data to help Google enhance performance and features.`': '`开启后，${c.product.nameShort} 会收集使用数据，以帮助 Google 改进性能和功能。`',
         '`Receive product updates, tips, and promotions from Google ${c.product.nameShort} via email.`': '`通过电子邮件接收来自 Google ${c.product.nameShort} 的产品更新、技巧和推广信息。`',
-        '"Yes, I\'d like to receive product updates, tips, and promotions from Google "': '"是的，我愿意接收来自 Google 的产品更新、技巧和推广信息 "',
+        '"Yes, I\'d like to receive product updates, tips, and promotions from Google "': '"是的，我愿意接收来自 Google 的产品更新、技巧 and 推广信息 "',
         '"By using this app, you agree to its"': '"使用此应用即表示你同意其"',
         '"Open Agent panel on window reload"': '"窗口重载时打开智能体面板。"',
         '"Allows the agent to access files outside of your current workspace."': '"允许智能体访问当前工作区之外的文件。"',
@@ -285,13 +295,13 @@ def main():
         '"Controls whether the agent can run custom JavaScript to automate complex browser actions."': '"控制智能体是否可以运行自定义 JavaScript 来自动化复杂的浏览器操作。"',
         '"Path to the Chrome/Chromium executable. Leave empty for auto-detection."': '"Chrome/Chromium 可执行文件路径。留空则自动检测。"',
         '"Custom path for the browser user profile directory. Leave empty for default (~/.gemini/antigravity-browser-profile)."': '"浏览器用户配置目录的自定义路径。留空则使用默认值（~/.gemini/antigravity-browser-profile）。"',
-        '"Port number for Chrome DevTools Protocol remote debugging. Leave empty for default (9222)."': '"Chrome DevTools Protocol 远程调试端口。留空则使用默认值（9222）。"',
+        '"Port number for Chrome DevTools Protocol remote debugging. Leave empty for default (9222)."': '"Port number for Chrome DevTools Protocol remote debugging. Leave empty for default (9222)."',
         '"Show "Edit" and "Chat" buttons when selecting text in the editor."': '"在编辑器中选中文本时显示“编辑”和“聊天”按钮。"',
         '\'Show "Edit" and "Chat" buttons when selecting text in the editor.\'': '\'在编辑器中选中文本时显示“编辑”和“聊天”按钮。\'',
         '"When enabled, the agent will include default customizations, including default skills."': '"启用后，智能体会包含默认自定义内容，包括默认技能。"',
         '"Prevent the computer from sleeping while the app is running."': '"在应用运行期间阻止计算机进入睡眠。"',
         '"The app will be accessible from the menu bar and will keep running in the background when all windows are closed."': '"应用可从菜单栏访问，并会在所有窗口关闭后继续在后台运行。"',
-        '"If enabled, you can manage your conversations from the Antigravity website. Please reload the application to apply this setting."': '"启用后，你可以在 Antigravity 网站上管理对话。请重新加载应用以使设置生效。"',
+        '"If enabled, you can manage your conversations from the Antigravity website. Please reload the application to apply this setting."': '"If enabled, you can manage your conversations from the Antigravity website. Please reload the application to apply this setting."',
         '"Configure the browser subagent. It requires"': '"配置浏览器子智能体。它需要"',
         '"to be installed. The browser subagent can be invoked by typing /browser in the conversation input box."': '"已安装。可在对话输入框中输入 /browser 来调用浏览器子智能体。"',
         '"No permissions configured."': '"尚未配置任何权限。"',
@@ -322,8 +332,8 @@ def main():
         '"Inherits from global settings. Local permissions have higher priority. Learn more."': '"继承全局设置。本地权限具有更高优先级。了解更多。"',
         '"Inherits from global settings. Local permissions have higher priority. "': '"继承全局设置。本地权限具有更高优先级。"',
         '"Learn more."': '"了解更多。"',
-        '"Configure allowed and denied paths for file reads and writes."': '"配置文件读写时允许和拒绝的路径。"',
-        '"Configure allowed and denied URLs for reading."': '"配置读取时允许和拒绝的 URL。"',
+        '"Configure allowed and denied paths for file reads and writes."': '"配置文件读写时允许 and 拒绝的路径。"',
+        '"Configure allowed and denied URLs for reading."': '"配置读取时允许 and 拒绝的 URL。"',
         '"Configure allowed terminal commands."': '"配置允许的终端命令。"',
         '"Configure allowed commands outside the sandbox."': '"配置沙箱外允许执行的命令。"',
         '"Configure external tools via Model Context Protocol."': '"通过 Model Context Protocol 配置外部工具。"',
@@ -400,6 +410,29 @@ def main():
             
     print(f"Replaced {replaced_count} of {len(translations)} strings.")
     
+    # Robust settings sidebar label localization
+    # Matches the g1 settings navigation button component and replaces its text var
+    # with a Chinese display translation lookup dict, leaving internal routing IDs in English.
+    pos = content.find("const g1=")
+    if pos != -1:
+        print("Found settings sidebar component (g1). Injecting translation map...")
+        span_str = 'F.createElement("span",{className:O("text-sm transition-colors select-none truncate flex-1",c?"text-foreground":"text-secondary-foreground group-hover:text-foreground")},a)'
+        if span_str in content:
+            translation_map = '({"Permissions":"权限","Appearance":"外观","Notifications":"通知","Models":"模型","Customizations":"自定义","Browser":"浏览器","Tab":"Tab","Editor":"编辑器","App":"应用","Best of N":"Best of N","Account":"账户","Google Drive":"谷歌云端硬盘","Shortcuts":"快捷键","Provide Feedback":"提供反馈","General":"通用","Conversations":"对话","Projects":"项目","Project General":"项目常规","Project Folders":"项目文件夹","Project Agent":"项目智能体"}[a]||a)'
+            patched_span = span_str.replace(',a)', f',{translation_map})')
+            content = content.replace(span_str, patched_span)
+            print("Successfully patched sidebar translation via direct match!")
+        else:
+            # Fallback regex search for custom names/minification
+            pattern = r'(F\.createElement\("span",\{className:\w+\("text-sm transition-colors select-none truncate flex-1",\w+\?"text-foreground":"text-secondary-foreground group-hover:text-foreground"\)\},)(\w+)\)'
+            match = re.search(pattern, content)
+            if match:
+                prefix = match.group(1)
+                text_var = match.group(2)
+                translation_map = '({"Permissions":"权限","Appearance":"外观","Notifications":"通知","Models":"模型","Customizations":"自定义","Browser":"浏览器","Tab":"Tab","Editor":"编辑器","App":"应用","Best of N":"Best of N","Account":"账户","Google Drive":"谷歌云端硬盘","Shortcuts":"快捷键","Provide Feedback":"提供反馈","General":"通用","Conversations":"对话","Projects":"项目","Project General":"项目常规","Project Folders":"项目文件夹","Project Agent":"项目智能体"}[%s]||%s)' % (text_var, text_var)
+                content = content.replace(match.group(0), prefix + translation_map + ')')
+                print(f"Successfully patched sidebar translation via regex (variable: {text_var})!")
+
     # Save the modified file
     print(f"Writing to: {output_file}")
     with open(output_file, 'w', encoding='utf-8') as f:
